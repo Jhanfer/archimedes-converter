@@ -138,7 +138,7 @@ class Archimedes():
             "libxfont2": "libxfont2",
         }
 
-        base_name = re.match(r'^([^>=]+)', dep).group(1) #separa las depenedencias de las versiones
+        base_name = re.match(r'^([^>=]+)', dep).group(1) #separa las dependencias de las versiones
         arch_name = debian_to_arch.get(base_name, base_name) #busca su equivalente de arch
         return arch_name
 
