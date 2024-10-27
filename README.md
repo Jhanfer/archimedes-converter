@@ -53,6 +53,13 @@ chmod +x archimedes-converter.py
 # Mostrar ayuda
 ./archimedes-converter.py --help
 ```
+## ⭐ Recomendación:
+Se recomienda utilizar linea de comandos para evitar posibles errores de instalación:
+```bash
+sudo pacman -U <nombre del paquete convertido>
+```
+
+
 
 ## 🔍 Proceso de Conversión
 
