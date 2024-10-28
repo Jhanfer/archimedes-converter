@@ -35,11 +35,11 @@ import re
 import datetime
 
 parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux",
-                                usage="Por favor, ponga una ruta de archivo a convertir. Use -h para ayuda")
+                                usage="Por favor, ingrese una ruta de archivo a convertir. Use -h para ayuda")
 pkgrel=1
 class Archimedes():
     def commands(self, *command_tuple:tuple):
-        """Verifica si existen la variable PATH
+        """Verifica si existe la variable PATH
         y busca los comandos en ella"""
         path = os.getenv("PATH") #Variable de entorno PATH (donde están los comandos para encontrar las aplicaciones)
         if path is not None:
