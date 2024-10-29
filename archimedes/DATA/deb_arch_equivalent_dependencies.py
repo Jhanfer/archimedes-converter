@@ -252,5 +252,8 @@ debian_to_arch = {
             "libcups2":"cups",
             "libudev1":"udev",
             "fonts-liberation":"ttf-liberation"
+<<<<<<< HEAD
             
+=======
+>>>>>>> 41d19e2254a3ad13856a660a05c8295d3f0097bc
         }
