@@ -248,5 +248,9 @@ debian_to_arch = {
             "libtommath1": "libtommath",
             "libmms0": "libmms",
             "libmatio4": "matio",
-            "libzip4": "libzip"
+            "libzip4": "libzip",
+            "libcups2":"cups",
+            "libudev1":"udev",
+            "fonts-liberation":"ttf-liberation"
+            
         }

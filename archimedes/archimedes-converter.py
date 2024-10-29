@@ -37,16 +37,11 @@ from contextlib import contextmanager
 from DATA.deb_arch_equivalent_dependencies import debian_to_arch
 import hashlib
 
-<<<<<<< HEAD
-parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
-                                usage="./archimedes-converter.py <ruta de archivo .deb>. Use -h para obtener ayuda.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-=======
 
 parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
                                 usage="Por favor, ponga una ruta de archivo a convertir. Use -h para ayuda",
                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
->>>>>>> origin/main
 pkgrel=1
 class Archimedes():
 
@@ -121,18 +116,20 @@ class Archimedes():
         if pkginfo["url"]:
             url = pkginfo["url"]
         else:
-            url = "<http://www.archlinux.org>"
+            _, splited = pkginfo["maintainer"].split("<")
+            url = f"<{splited}"
 
         #escribe el archivo PKGINFO con los siguientes datos:
         _ = os.write(fd, str.encode("# Generado por Archimedes\n"))
         _ = os.write(fd, str.encode(f"pkgname = {pkginfo["package"]}\n"))
         _ = os.write(fd, str.encode(f"pkgver = {pkginfo["version"]}-{pkgrel}\n"))
-        _ = os.write(fd, str.encode(f"pkgdesc = \"{pkginfo["description"]}\"\n"))
+        _ = os.write(fd, str.encode(f"pkgdesc = {pkginfo["description"]}\n"))
         _ = os.write(fd, str.encode(f"packager = \"Arch Linux, Archimedes <https://github.com/Jhanfer/archimedes-converter>\"\n"))
         _ = os.write(fd, str.encode(f"size = {pkginfo["installed-size"]}\n"))
         _ = os.write(fd, str.encode(f"arch = {pkginfo["architecture"]}\n"))
-        _ = os.write(fd, str.encode(f"license = None\n"))
-        _ = os.write(fd, str.encode(f"url = {url}\n"))
+        _ = os.write(fd, str.encode(f"category = {pkginfo["section"]}\n"))
+        _ = os.write(fd, str.encode(f"license = unknown\n"))
+        _ = os.write(fd, str.encode(f"url = \"{url}\"\n"))
         _ = os.write(fd, str.encode(f"builddate = {pkginfo["builddate"]}\n"))
         _ = os.write(fd, str.encode(f"{"\n".join(f"depend = {i}" for i in pkginfo["depends"])}"))
 
@@ -180,8 +177,8 @@ class Archimedes():
         }
         #unix timestamp
         date = datetime.datetime.now()
-        unix_timestamp = datetime.datetime.timestamp(date)*1000
-        #mapeo de campos
+        unix_timestamp = int(datetime.datetime.timestamp(date))
+        #mapeo de campos 
         mapped_fields = {
             "architecture": "",
             "package": "",
@@ -189,10 +186,11 @@ class Archimedes():
             "maintainer": "",
             "installed-size": "",
             "version": "",
-            "builddate":f"{int(unix_timestamp)}",
+            "builddate":f"{unix_timestamp}",
             "depends":[],
             "license":"",
-            "url":""
+            "url":"",
+            "section":""
         }        
 
         # Procesar cada coincidencia
@@ -200,14 +198,6 @@ class Archimedes():
             field = match.group(1).lower()  # campo 
             value = match.group(2).strip()  # valor del campo
 
-<<<<<<< HEAD
-            if field in mapped_fields:  # verifica si está presente en el mapeo de campos
-                match field:
-                    case "architecture":
-                        mapped_fields[field] = architectures.get(value, "any")  # retorna la arquitectura correcta
-
-                    case "homepage" | "url":
-=======
 
             if field in mapped_fields: #verifica si está presente en el mapeo de campos
                 #se cambian los if-elif-else por match-case
@@ -216,42 +206,29 @@ class Archimedes():
                         mapped_fields[field] = architectures.get(value, "any") #retorna la arquitectura correcta
 
                     case "homepage" | "url":
-
->>>>>>> origin/main
-                        mapped_fields[field] = value
+                        _, splited = value.split("<")
+                        mapped_fields[field] = f"<{splited}"
 
                     case "depends":
                         depends = value.split(", ")
                         for i in depends:
-<<<<<<< HEAD
-                            nombre, *version = i.split(">=")
-=======
 
                             nombre,*version = i.split(">=")
 
->>>>>>> origin/main
                             version = "".join(version)
                             f_name = re.sub(r'[^\w.>=-]', '', nombre)
                             f_version = re.sub(r'[^\w.>=-]', '', version)
                             arch_dep = self.change_dependencies(f_name)
                             if arch_dep.count('lib') > 1:
-<<<<<<< HEAD
-                                # Opcional: puedes eliminar este bloque si "no está en uso"
-=======
 
                                 libs = re.findall(r'lib[a-zA-Z0-9-]+(?=[lib]|$)', arch_dep)
                                 """no está en uso"""
->>>>>>> origin/main
                                 continue
                             else:
                                 mapped_fields["depends"].append(f"{arch_dep}")
                     
                     case "description":
                         mapped_fields[field] = value.replace('\n', '').replace('\r', '')
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
 
                     case "version":
                         try:
@@ -261,48 +238,18 @@ class Archimedes():
                             mapped_fields[field] = value
 
                     case _:
-<<<<<<< HEAD
-                        mapped_fields[field] = value  # Asigna el valor por defecto si no hay coincidencias específicas
-
-        # Validación de campos obligatorios
-        if not mapped_fields["description"] and not mapped_fields["installed-size"]:
-=======
-
                         mapped_fields[field] = value
             else:
                 continue
         
         if not mapped_fields["description"] and not mapped_fields["installed-size"]: #verifica si está description y size
-
->>>>>>> origin/main
             print("Falta información necesaria")
             sys.exit(1)
 
-            
         os.close(file) #cierra el archivo
         
         return mapped_fields
-
-    def command_handler(self,*arg) -> dict:
-        """Manejador de comandos y eventos
-        y retorna el input y output del archivo"""
-        
-        #maneja los argumentos: ruta de archivo y comando -help
-        parser.add_argument("input_deb_file", help="Ruta del archivo a convertir (.deb). Es obligatorio ingresar este dato, porque sin él no es posible localizar el archivo. El resultado del Script de Archimedes guardará el archivo convertido en la misma carpeta que el archivo original.", type=str)
-        args = parser.parse_args()
-        path = args.input_deb_file
-
-        if not os.path.isfile(path) and not os.access(path,os.F_OK): #verifica si es una ruta de archivo válida
-            print("Por favor, ingrese una ruta correcta...")
-            sys.exit(1)
-        
-        _, file_extension = os.path.splitext(path) #rompe la ruta del archivo y la extensión del archivo
-        
-        if file_extension != ".deb": #verifica si la extensión del archivo es ".deb"
-            print("No es un archivo \".deb\" ")
-            sys.exit(1)
-
-        return {"input_file":os.path.abspath(path),"output_file":f"{_}.pkg.tar.gz"} #devuelve la ruta del archivo entrante y genera una ruta de salida con la extensión "pkg.tar.gz"
+    
 
     def change_dir(self,directory):
         """Cambia el directorio"""
@@ -318,7 +265,7 @@ class Archimedes():
         output_tempdir = mkdtemp()
         try:
             yield input_tempdir, output_tempdir #se utiliza el controlador de llamada yield
-        except:
+        finally:
             shutil.rmtree(input_tempdir, True) 
             shutil.rmtree(output_tempdir, True)
 
@@ -333,7 +280,8 @@ class Archimedes():
                 #extraer el "data.tar" de la carpeta temporal en la carpeta de salida temporal  
                 os.system(f"tar -xf {input_dir} -C {shlex.quote(output_dir)}") #esto es una linea de codigo utilizable en bash
             elif kwarg["options"] == "make_pkg":
-                context = os.system(f"tar -zvcf {shlex.quote(output_file)} * .PKGINFO .FILELIST .CHECKSUMS") #crea el instalador "pkg.tar.gz" usando el "PKGINFO" y "FILELIST" y lo deja en la ruta de salida "output_file"
+                context = os.system(f"ionice -c2 -n7 nice -n 19 tar -zvcf {shlex.quote(output_file)} * .PKGINFO .FILELIST .CHECKSUMS") #crea el instalador "pkg.tar.gz" usando el "PKGINFO" y "FILELIST" y lo deja en la ruta de salida "output_file"
+                os.system("clear")
                 return context
             elif kwarg["options"] == "make_pkginfo":
                 os.system("find . -type f | sed -e \'s/^\\.\\///\' > .FILELIST") #crea un archivo con una lista de los nombres de los archivos dentro del directorio y sus subcarpetas
@@ -342,7 +290,7 @@ class Archimedes():
             sys.exit(1)
 
     def check_tar_gz(self, input_file:str):
-
+        """Comprobador de data.tar.gz o data.tar.xz"""
         if os.path.exists("data.tar.gz"): #comprueba si existe el archivo "data.tar.gz"
             data_path = "data.tar.gz"
         else:
@@ -357,55 +305,157 @@ class Archimedes():
 
         return data_path
 
-    def convert(self, input_file:str, output_file:str):
+    
+
+    def convert(self, input_file:str, output_file:str) -> tuple:
+        """Crea archivos PKGINFO y FILELIST.
+        
+        Convierte el .deb en un paquete de arch
+        """
         print("\nIniciando conversión. Por favor, sea paciente y no teclee en la terminal.\n")    
         with self.temp_directories("sas") as (input_tempdir, output_tempdir): #llama al gestor de contexto de archivos temporales
             print(f"Creando archivos temporales\nInput: {input_tempdir}\nOutput: {output_tempdir}\n")
 
-        self.change_dir(input_tempdir) #accede al directorio temporal para posteriormente ser eliminado
-        
-        self.command_executer(input_file=input_file,options="ar_command_extract") #llama al extractor de archivos
+            if output_file == "":
+                _, coso = input_file.split(".deb")
+                output_file = f"{_}.pkg.tar.gz"
 
-        data_path = self.check_tar_gz(input_file)
-        
-        self.command_executer(input_dir=shlex.quote(os.path.join(input_tempdir, data_path)),output_dir=output_tempdir, options="tar_command_extract") #llama al extractor de archivos
+            self.change_dir(input_tempdir) #accede al directorio temporal para posteriormente ser eliminado
+            
+            self.command_executer(input_file=input_file,options="ar_command_extract") #llama al extractor de archivos
 
-        #extraer archivo control en la carpeta temporal
-        control_file = os.path.join(input_tempdir, "control.tar.gz") #dirección del archivo control
-        if os.path.isfile(control_file): #comprobar si es un archivo o si existe
-            self.command_executer(input_dir=control_file,output_dir=input_tempdir,options="tar_command_extract") #llama al extractor de archivos
-        else:
-            control_file = os.path.join(input_tempdir, "control.tar.xz") #por si está en otro formato
+            data_path = self.check_tar_gz(input_file)
+            
+            self.command_executer(input_dir=shlex.quote(os.path.join(input_tempdir, data_path)),output_dir=output_tempdir, options="tar_command_extract") #llama al extractor de archivos
+
+            #extraer archivo control en la carpeta temporal
+            control_file = os.path.join(input_tempdir, "control.tar.gz") #dirección del archivo control
             if os.path.isfile(control_file): #comprobar si es un archivo o si existe
-                os.system(f"tar -xf {shlex.quote(control_file)}") #extración del archivo control
+                self.command_executer(input_dir=control_file,output_dir=input_tempdir,options="tar_command_extract") #llama al extractor de archivos
             else:
-                print("El archivo control no ha sido encontrado...")
+                control_file = os.path.join(input_tempdir, "control.tar.xz") #por si está en otro formato
+                if os.path.isfile(control_file): #comprobar si es un archivo o si existe
+                    os.system(f"tar -xf {shlex.quote(control_file)}") #extración del archivo control
+                else:
+                    print("El archivo control no ha sido encontrado...")
+                    sys.exit(1)
+            deb_info = self.read_control(os.path.join(input_tempdir, "control")) #lee el archivo control y retorna la información necesaria para crear el "PKGINFO"
+            os.chdir(output_tempdir) #cambiamos de directorio
+            
+            self.command_executer(options="make_pkginfo") #llama al ejecutador de comandos para crear el PKGINFO
+            self.write_archcontrol(f"{output_tempdir}/.PKGINFO", deb_info) #crea el archivo PKGINFO en el directorio temporal de salida con los datos extraidos de "deb_info"
+            
+            
+            checksums = self.calculate_checksums(file_path=input_file) #calculamos el checksum del archivo original
+            self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
+            context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
+            
+            output,_ = os.path.split(output_file)
+
+            return output, context
+
+    def convert_iterator(self, DATA:dict):
+        """Iterador para la función convert"""
+        if DATA:
+            if type(DATA["input_file"]) == list:
+                for input in DATA["input_file"]:
+                    output, context = self.convert(input, "")
+                return output, context
+
+            elif type(DATA["input_file"]) == str and type(DATA["output_file"]) == str:
+                output, context = self.convert(DATA["input_file"],DATA["output_file"])
+                return output, context
+
+
+    def simple_gui(self, path) -> dict:
+        """GUI simple"""
+        os.system("clear")
+        input_deb_path = []
+        output_deb_path = []
+        input_deb_names = []
+        
+        file_path, file = os.path.split(path) #rompe la ruta del archivo y la extensión del archivo
+        file_name, file_extension = os.path.splitext(file) #extrae el nombre del archivo y su extensión
+        
+        #print(f"file_path: {file_path}\n file: {file}\n file_name: {file_name}\n file_extension: {file_extension}")
+
+        if file:
+            if not file_extension != ".deb":
+                input_file_path = f"{os.path.abspath(os.path.join(file_path,file))}"
+                output_file_path = f"{os.path.abspath(os.path.join(file_path,file_name))}.pkg.tar.gz"
+                
+                return {"input_file":input_file_path,"output_file":""} #devuelve la ruta del archivo entrante y genera una ruta de salida con la extensión "pkg.tar.gz"
+            else:
+                print("ponga un archivo con extensión válido")
                 sys.exit(1)
-        deb_info = self.read_control(os.path.join(input_tempdir, "control")) #lee el archivo control y retorna la información necesaria para crear el "PKGINFO"
-        os.chdir(output_tempdir) #cambiamos de directorio
-        
-        self.command_executer(options="make_pkginfo") #llama al ejecutador de comandos para crear el PKGINFO
-        self.write_archcontrol(f"{output_tempdir}/.PKGINFO", deb_info) #crea el archivo PKGINFO en el directorio temporal de salida con los datos extraidos de "deb_info"
-        
-        
-        checksums = self.calculate_checksums(file_path=input_file) #calculamos el checksum del archivo original
-        self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
-        context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
-        return output_file, context
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/main
+        if not file:    
+            files_lista:list = os.listdir(path)
+            for i in files_lista:
+                if i.endswith(".deb"):
+                    _, file_extension = os.path.splitext(i)
+                    input_deb_path.append(os.path.abspath(f"{file_path}/{i}"))
+                    output_deb_path.append(os.path.abspath(f"{file_path}/{_}.pkg.tar.gz"))
+                    input_deb_names.append(f"{i}")
+            
+            if input_deb_path and output_deb_path:
+                print("\nArchivos \".deb\" encontrados en la ruta:\n")
+                extension = 0
+                
+                for names in input_deb_names:
+                    extension += 1
+                    print(f"{extension}. {names}")
+                print("\nEscriba \"all\" para convertirlos a todos o el número del archivo que desee convertir. Presione cualquier tecla para cerrar:")
+            
+            select = input("\n")
+            os.system("clear")
+            match select:
+                case "all":
+                    return {"input_file":input_deb_path,"output_file":output_deb_path}
+                case _:
+                    if select.isdigit():
+                        return {"input_file":input_deb_path[int(select)-1],"output_file":output_deb_path[int(select)-1]}
+                    else:
+                        os.system("clear")
+                        print("Adiós!")
+                        sys.exit(1)
+            sys.exit(1)
+        else:
+            print("ponga un archivo o directorio")
+            sys.exit(1)
 
-if __name__ == "__main__":
+
+    def command_handler(self,*arg) -> dict:
+        """Manejador de comandos y eventos
+        y retorna el path del archivo"""
+        
+        #maneja los argumentos: ruta de archivo y comando -help
+        parser.add_argument("input_deb_file", help="Ruta del archivo a convertir (.deb). Es obligatorio ingresar este dato, porque sin él no es posible localizar el archivo. El resultado del Script de Archimedes guardará el archivo convertido en la misma carpeta que el archivo original.", type=str)
+        args = parser.parse_args()
+        path = args.input_deb_file
+
+        if not os.path.isfile(path) and not os.access(path,os.F_OK): #verifica si es una ruta de archivo válida
+            print("Por favor, ingrese una ruta correcta...")
+            sys.exit(1)
+        
+        return path
+
+
+
+if __name__ == "__main__": 
     archimedes = Archimedes() #inicializa la clase
     try:
-        DATA = archimedes.command_handler() #inicializa el manejador de argumentos y los guarda en "DATA"
+        PATH = archimedes.command_handler() #inicializa el manejador de argumentos y los guarda en "DATA"
         archimedes.commands("ar", "tar", "find", "sed") #inicializa la búsqueda de los comandos
-        output_file,context = archimedes.convert(DATA["input_file"],DATA["output_file"]) #inicializa la conversión con los datos extraidos del manejador de argumentos
-        match context:
-            case 0:
-                print(f"\nHecho! \nSu archivo se encuentra en \"{output_file}\"")
+        gui = True
+        while gui:
+            DATA = archimedes.simple_gui(PATH)
+            output, context = archimedes.convert_iterator(DATA)#inicializa la conversión con los datos extraidos del manejador de argumentos
+            match context:
+                case 0:
+                    print(f"\nHecho! \nSu archivo se encuentra en \"{output}\"")
+                    continue
+
     except KeyboardInterrupt:
         print("Abortando...")
 
