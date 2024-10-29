@@ -1,7 +1,7 @@
 # Archimedes Converter
 
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.x-green.svg)
+![Python](https://img.shields.io/badge/python-3.10-green.svg)
 
 Archimedes es una herramienta de línea de comandos que permite convertir paquetes Debian (.deb) a paquetes instalables de Arch Linux (.pkg.tar.gz).
 
@@ -20,7 +20,7 @@ El script requiere los siguientes comandos disponibles en el sistema:
 - `tar`
 - `find`
 - `sed`
-- Python 3.x
+- Python 3.10
 
 ## 🔧 Instalación
 
