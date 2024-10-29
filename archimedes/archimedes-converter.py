@@ -37,14 +37,8 @@ from contextlib import contextmanager
 from DATA.deb_arch_equivalent_dependencies import debian_to_arch
 import hashlib
 
-<<<<<<< HEAD:archimedes/archimedes-converter.py
-parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux",
-                                usage="Por favor, ponga una ruta de archivo a convertir. Use -h para ayuda",
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-=======
 parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
                                 usage="./archimedes-converter.py <ruta de archivo .deb>. Use -h para obtener ayuda.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
 pkgrel=1
 class Archimedes():
 
@@ -198,51 +192,27 @@ class Archimedes():
             field = match.group(1).lower()  # campo 
             value = match.group(2).strip()  # valor del campo
 
-<<<<<<< HEAD:archimedes/archimedes-converter.py
-            if field in mapped_fields: #verifica si está presente en el mapeo de campos
-                #se cambian los if-elif-else por match-case
-                match field:
-                    case "architecture": 
-                        mapped_fields[field] = architectures.get(value, "any") #retorna la arquitectura correcta
-
-                    case "hompage" | "url":
-=======
             if field in mapped_fields:  # verifica si está presente en el mapeo de campos
                 match field:
                     case "architecture":
                         mapped_fields[field] = architectures.get(value, "any")  # retorna la arquitectura correcta
 
                     case "homepage" | "url":
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
                         mapped_fields[field] = value
 
                     case "depends":
                         depends = value.split(", ")
                         for i in depends:
-<<<<<<< HEAD:archimedes/archimedes-converter.py
-                            nombre,*version = i.split(">=")
-=======
                             nombre, *version = i.split(">=")
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
                             version = "".join(version)
                             f_name = re.sub(r'[^\w.>=-]', '', nombre)
                             f_version = re.sub(r'[^\w.>=-]', '', version)
                             arch_dep = self.change_dependencies(f_name)
                             if arch_dep.count('lib') > 1:
-<<<<<<< HEAD:archimedes/archimedes-converter.py
-                                libs = re.findall(r'lib[a-zA-Z0-9-]+(?=[lib]|$)', arch_dep)
-                                """no está en uso"""
-                                continue
-                            else:
-                                mapped_fields["depends"].append(f"{arch_dep}")
-                    case "description":
-                        mapped_fields[field] = value.replace('\n', '').replace('\r', '')
-=======
                                 # Opcional: puedes eliminar este bloque si "no está en uso"
                                 continue
                             else:
                                 mapped_fields["depends"].append(f"{arch_dep}")
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
 
                     case "version":
                         try:
@@ -252,18 +222,10 @@ class Archimedes():
                             mapped_fields[field] = value
 
                     case _:
-<<<<<<< HEAD:archimedes/archimedes-converter.py
-                        mapped_fields[field] = value
-            else:
-                continue
-        
-        if not mapped_fields["description"] and not mapped_fields["installed-size"]: #verifica si está description y size
-=======
                         mapped_fields[field] = value  # Asigna el valor por defecto si no hay coincidencias específicas
 
         # Validación de campos obligatorios
         if not mapped_fields["description"] and not mapped_fields["installed-size"]:
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
             print("Falta información necesaria")
             sys.exit(1)
 
@@ -351,7 +313,6 @@ class Archimedes():
         with self.temp_directories("sas") as (input_tempdir, output_tempdir): #llama al gestor de contexto de archivos temporales
             print(f"creando archivos temporales\ninput: {input_tempdir}\noutput: {output_tempdir}\n")
 
-<<<<<<< HEAD:archimedes/archimedes-converter.py
         self.change_dir(input_tempdir) #accede al directorio temporal para posteriormente ser eliminado
         
         self.command_executer(input_file=input_file,options="ar_command_extract") #llama al extractor de archivos
@@ -391,52 +352,6 @@ class Archimedes():
         self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
         context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
         return output_file, context
-=======
-        #print(os.path.basename(input_file)) #muestra el nombre del archivo, irrelevante
-
-        try:
-            self.change_dir(input_tempdir) #accede al directorio temporal
-
-            #extraer el archivo deb. Importante usar shlex para escapar correctamente la cadena de texto
-            os.system(f"ar x {shlex.quote(input_file)}") #esto es una linea de codigo utilizable en bash que extrae el archivo
-            
-            print(f"Creando archivos temporales... \nInput: {input_tempdir}\nOutput: {output_tempdir}")
-            
-            data_path = self.check_tar_gz(input_file) #comprueba la existencia del archivo
-           
-            #extraer el "data.tar" de la carpeta temporal en la carpeta de salida temporal  
-            os.system(f"tar -xf {shlex.quote(os.path.join(input_tempdir, data_path)) } -C {shlex.quote(output_tempdir)}") #esto es una linea de codigo utilizable en bash
-            
-            #extraer archivo control en la carpeta temporal
-            control_file = os.path.join(input_tempdir, "control.tar.gz") #dirección del archivo control
-            if os.path.isfile(control_file): #comprobar si es un archivo o si existe
-                os.system(f"tar -xf {shlex.quote(control_file)}") #extración del archivo control
-            else:
-                control_file = os.path.join(input_tempdir, "control.tar.xz") #por si está en otro formato
-                if os.path.isfile(control_file): #comprobar si es un archivo o si existe
-                    os.system(f"tar -xf {shlex.quote(control_file)}") #extración del archivo control
-                else:
-                    print("El archivo control no ha sido encontrado...")
-                    sys.exit(1)
-
-            deb_info = self.read_control(os.path.join(input_tempdir, "control")) #lee el archivo control y retorna la información necesaria para crear el "PKGINFO"
-            
-            os.chdir(output_tempdir) #cambiamos de directorio
-
-            os.system("find . -type f | sed -e \'s/^\\.\\///\' > .FILELIST") #crea un archivo con una lista de los nombres de los archivos dentro del directorio y sus subcarpetas
-            self.write_archcontrol(f"{output_tempdir}/.PKGINFO", deb_info) #crea el archivo PKGINFO en el directorio temporal de salida con los datos extraidos de "deb_info"
-            os.system(f"tar -zvcf {shlex.quote(output_file)} * .PKGINFO .FILELIST") #crea el instalador "pkg.tar.gz" usando el "PKGINFO" y "FILELIST" y lo deja en la ruta de salida "output_file"
-
-        except:
-            print("Algo ha fallado.")
-        finally:
-            #elimina los directorios temporales
-            shutil.rmtree(input_tempdir, True) 
-            shutil.rmtree(output_tempdir, True)
-            print("Hecho!\n")
-            print(f"Su archivo se encuentra en: {output_file}")
-
->>>>>>> 3de532c456c593c7344420de779a86821e3d7d06:archimedes code/archimedes-converter.py
 
 if __name__ == "__main__":
     archimedes = Archimedes() #inicializa la clase
