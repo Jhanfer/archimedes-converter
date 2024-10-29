@@ -424,7 +424,6 @@ class Archimedes():
             print("ponga un archivo o directorio")
             sys.exit(1)
 
-
     def command_handler(self,*arg) -> dict:
         """Manejador de comandos y eventos
         y retorna el path del archivo"""
