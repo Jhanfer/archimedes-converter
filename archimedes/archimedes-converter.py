@@ -213,6 +213,8 @@ class Archimedes():
                                 continue
                             else:
                                 mapped_fields["depends"].append(f"{arch_dep}")
+                    case "description":
+                        mapped_fields[field] = value.replace('\n', '').replace('\r', '')
 
                     case "version":
                         try:
