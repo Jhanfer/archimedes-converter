@@ -37,8 +37,16 @@ from contextlib import contextmanager
 from DATA.deb_arch_equivalent_dependencies import debian_to_arch
 import hashlib
 
+<<<<<<< HEAD
 parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
                                 usage="./archimedes-converter.py <ruta de archivo .deb>. Use -h para obtener ayuda.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+=======
+
+parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
+                                usage="Por favor, ponga una ruta de archivo a convertir. Use -h para ayuda",
+                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+>>>>>>> origin/main
 pkgrel=1
 class Archimedes():
 
@@ -192,29 +200,58 @@ class Archimedes():
             field = match.group(1).lower()  # campo 
             value = match.group(2).strip()  # valor del campo
 
+<<<<<<< HEAD
             if field in mapped_fields:  # verifica si está presente en el mapeo de campos
                 match field:
                     case "architecture":
                         mapped_fields[field] = architectures.get(value, "any")  # retorna la arquitectura correcta
 
                     case "homepage" | "url":
+=======
+
+            if field in mapped_fields: #verifica si está presente en el mapeo de campos
+                #se cambian los if-elif-else por match-case
+                match field:
+                    case "architecture": 
+                        mapped_fields[field] = architectures.get(value, "any") #retorna la arquitectura correcta
+
+                    case "homepage" | "url":
+
+>>>>>>> origin/main
                         mapped_fields[field] = value
 
                     case "depends":
                         depends = value.split(", ")
                         for i in depends:
+<<<<<<< HEAD
                             nombre, *version = i.split(">=")
+=======
+
+                            nombre,*version = i.split(">=")
+
+>>>>>>> origin/main
                             version = "".join(version)
                             f_name = re.sub(r'[^\w.>=-]', '', nombre)
                             f_version = re.sub(r'[^\w.>=-]', '', version)
                             arch_dep = self.change_dependencies(f_name)
                             if arch_dep.count('lib') > 1:
+<<<<<<< HEAD
                                 # Opcional: puedes eliminar este bloque si "no está en uso"
+=======
+
+                                libs = re.findall(r'lib[a-zA-Z0-9-]+(?=[lib]|$)', arch_dep)
+                                """no está en uso"""
+>>>>>>> origin/main
                                 continue
                             else:
                                 mapped_fields["depends"].append(f"{arch_dep}")
+                    
                     case "description":
                         mapped_fields[field] = value.replace('\n', '').replace('\r', '')
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 
                     case "version":
                         try:
@@ -224,10 +261,20 @@ class Archimedes():
                             mapped_fields[field] = value
 
                     case _:
+<<<<<<< HEAD
                         mapped_fields[field] = value  # Asigna el valor por defecto si no hay coincidencias específicas
 
         # Validación de campos obligatorios
         if not mapped_fields["description"] and not mapped_fields["installed-size"]:
+=======
+
+                        mapped_fields[field] = value
+            else:
+                continue
+        
+        if not mapped_fields["description"] and not mapped_fields["installed-size"]: #verifica si está description y size
+
+>>>>>>> origin/main
             print("Falta información necesaria")
             sys.exit(1)
 
@@ -241,7 +288,7 @@ class Archimedes():
         y retorna el input y output del archivo"""
         
         #maneja los argumentos: ruta de archivo y comando -help
-        parser.add_argument("input_deb_file", help="Ruta de archivo a convertir", type=str)
+        parser.add_argument("input_deb_file", help="Ruta del archivo a convertir (.deb). Es obligatorio ingresar este dato, porque sin él no es posible localizar el archivo. El resultado del Script de Archimedes guardará el archivo convertido en la misma carpeta que el archivo original.", type=str)
         args = parser.parse_args()
         path = args.input_deb_file
 
@@ -311,24 +358,15 @@ class Archimedes():
         return data_path
 
     def convert(self, input_file:str, output_file:str):
-        print("\nIniciando conversión. Por favor, sea paciente y no teclee en la terminal:\n")    
+        print("\nIniciando conversión. Por favor, sea paciente y no teclee en la terminal.\n")    
         with self.temp_directories("sas") as (input_tempdir, output_tempdir): #llama al gestor de contexto de archivos temporales
-            print(f"creando archivos temporales\ninput: {input_tempdir}\noutput: {output_tempdir}\n")
+            print(f"Creando archivos temporales\nInput: {input_tempdir}\nOutput: {output_tempdir}\n")
 
         self.change_dir(input_tempdir) #accede al directorio temporal para posteriormente ser eliminado
         
         self.command_executer(input_file=input_file,options="ar_command_extract") #llama al extractor de archivos
 
-        if os.path.exists("data.tar.gz"): #comprueba si existe el archivo "data.tar.gz"
-                data_path = "data.tar.gz"
-        else:
-            for item in os.listdir("."): #crea una lista de los archivos en el directorio, después busca si existe "data.tar"
-                if item.find("data.tar") == 0: #esto va a encontrar el data.tar.xz si existiese y lo asigna a data_path
-                    data_path = item
-                    break
-            if data_path == "":
-                print(f"No se encontraron datos en {input_file}")
-                sys.exit(1)
+        data_path = self.check_tar_gz(input_file)
         
         self.command_executer(input_dir=shlex.quote(os.path.join(input_tempdir, data_path)),output_dir=output_tempdir, options="tar_command_extract") #llama al extractor de archivos
 
@@ -354,6 +392,10 @@ class Archimedes():
         self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
         context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
         return output_file, context
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 
 if __name__ == "__main__":
     archimedes = Archimedes() #inicializa la clase
