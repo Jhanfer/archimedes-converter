@@ -32,7 +32,7 @@ git clone https://github.com/Jhanfer/archimedes-converter.git
 cd archimedes-converter
 
 # Entrar a la carpeta code
-cd archimedes\ code
+cd archimedes
 
 # Dar permisos de ejecución
 chmod +x archimedes-converter.py
@@ -99,8 +99,8 @@ Este proyecto está bajo la Licencia GPL-3.0 - ver el archivo [LICENSE](LICENSE)
 
 ## ✨ Agradecimientos
 
-- A la comunidad de Arch Linux por su extensa documentación
-- A todos los contribuidores y probadores del proyecto
+- A la comunidad de Arch Linux por su extensa documentación.
+- A todos los contribuyentes y testers del proyecto.
 
 ## 👤 Autor
 
