@@ -37,16 +37,11 @@ from contextlib import contextmanager
 from DATA.deb_arch_equivalent_dependencies import debian_to_arch
 import hashlib
 
-<<<<<<< HEAD
-parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
-                                usage="./archimedes-converter.py <ruta de archivo .deb>. Use -h para obtener ayuda.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-=======
 
 parser = argparse.ArgumentParser(description="Script para convertir .deb en paquetes instalables de Arch Linux. Desarrollado por Jhanfer ❤",
                                 usage="Por favor, ponga una ruta de archivo a convertir. Use -h para ayuda",
                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
->>>>>>> origin/main
 pkgrel=1
 class Archimedes():
 
@@ -121,18 +116,20 @@ class Archimedes():
         if pkginfo["url"]:
             url = pkginfo["url"]
         else:
-            url = "<http://www.archlinux.org>"
+            _, splited = pkginfo["maintainer"].split("<")
+            url = f"<{splited}"
 
         #escribe el archivo PKGINFO con los siguientes datos:
         _ = os.write(fd, str.encode("# Generado por Archimedes\n"))
         _ = os.write(fd, str.encode(f"pkgname = {pkginfo["package"]}\n"))
         _ = os.write(fd, str.encode(f"pkgver = {pkginfo["version"]}-{pkgrel}\n"))
-        _ = os.write(fd, str.encode(f"pkgdesc = \"{pkginfo["description"]}\"\n"))
+        _ = os.write(fd, str.encode(f"pkgdesc = {pkginfo["description"]}\n"))
         _ = os.write(fd, str.encode(f"packager = \"Arch Linux, Archimedes <https://github.com/Jhanfer/archimedes-converter>\"\n"))
         _ = os.write(fd, str.encode(f"size = {pkginfo["installed-size"]}\n"))
         _ = os.write(fd, str.encode(f"arch = {pkginfo["architecture"]}\n"))
-        _ = os.write(fd, str.encode(f"license = None\n"))
-        _ = os.write(fd, str.encode(f"url = {url}\n"))
+        _ = os.write(fd, str.encode(f"category = {pkginfo["section"]}\n"))
+        _ = os.write(fd, str.encode(f"license = unknown\n"))
+        _ = os.write(fd, str.encode(f"url = \"{url}\"\n"))
         _ = os.write(fd, str.encode(f"builddate = {pkginfo["builddate"]}\n"))
         _ = os.write(fd, str.encode(f"{"\n".join(f"depend = {i}" for i in pkginfo["depends"])}"))
 
@@ -180,8 +177,8 @@ class Archimedes():
         }
         #unix timestamp
         date = datetime.datetime.now()
-        unix_timestamp = datetime.datetime.timestamp(date)*1000
-        #mapeo de campos
+        unix_timestamp = int(datetime.datetime.timestamp(date))
+        #mapeo de campos 
         mapped_fields = {
             "architecture": "",
             "package": "",
@@ -189,10 +186,11 @@ class Archimedes():
             "maintainer": "",
             "installed-size": "",
             "version": "",
-            "builddate":f"{int(unix_timestamp)}",
+            "builddate":f"{unix_timestamp}",
             "depends":[],
             "license":"",
-            "url":""
+            "url":"",
+            "section":""
         }        
 
         # Procesar cada coincidencia
@@ -200,14 +198,6 @@ class Archimedes():
             field = match.group(1).lower()  # campo 
             value = match.group(2).strip()  # valor del campo
 
-<<<<<<< HEAD
-            if field in mapped_fields:  # verifica si está presente en el mapeo de campos
-                match field:
-                    case "architecture":
-                        mapped_fields[field] = architectures.get(value, "any")  # retorna la arquitectura correcta
-
-                    case "homepage" | "url":
-=======
 
             if field in mapped_fields: #verifica si está presente en el mapeo de campos
                 #se cambian los if-elif-else por match-case
@@ -216,42 +206,29 @@ class Archimedes():
                         mapped_fields[field] = architectures.get(value, "any") #retorna la arquitectura correcta
 
                     case "homepage" | "url":
-
->>>>>>> origin/main
-                        mapped_fields[field] = value
+                        _, splited = value.split("<")
+                        mapped_fields[field] = f"<{splited}"
 
                     case "depends":
                         depends = value.split(", ")
                         for i in depends:
-<<<<<<< HEAD
-                            nombre, *version = i.split(">=")
-=======
 
                             nombre,*version = i.split(">=")
 
->>>>>>> origin/main
                             version = "".join(version)
                             f_name = re.sub(r'[^\w.>=-]', '', nombre)
                             f_version = re.sub(r'[^\w.>=-]', '', version)
                             arch_dep = self.change_dependencies(f_name)
                             if arch_dep.count('lib') > 1:
-<<<<<<< HEAD
-                                # Opcional: puedes eliminar este bloque si "no está en uso"
-=======
 
                                 libs = re.findall(r'lib[a-zA-Z0-9-]+(?=[lib]|$)', arch_dep)
                                 """no está en uso"""
->>>>>>> origin/main
                                 continue
                             else:
                                 mapped_fields["depends"].append(f"{arch_dep}")
                     
                     case "description":
                         mapped_fields[field] = value.replace('\n', '').replace('\r', '')
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
 
                     case "version":
                         try:
@@ -261,24 +238,14 @@ class Archimedes():
                             mapped_fields[field] = value
 
                     case _:
-<<<<<<< HEAD
-                        mapped_fields[field] = value  # Asigna el valor por defecto si no hay coincidencias específicas
-
-        # Validación de campos obligatorios
-        if not mapped_fields["description"] and not mapped_fields["installed-size"]:
-=======
-
                         mapped_fields[field] = value
             else:
                 continue
         
         if not mapped_fields["description"] and not mapped_fields["installed-size"]: #verifica si está description y size
-
->>>>>>> origin/main
             print("Falta información necesaria")
             sys.exit(1)
 
-            
         os.close(file) #cierra el archivo
         
         return mapped_fields
@@ -342,7 +309,7 @@ class Archimedes():
             sys.exit(1)
 
     def check_tar_gz(self, input_file:str):
-
+        """Comprobador de data.tar.gz o data.tar.xz"""
         if os.path.exists("data.tar.gz"): #comprueba si existe el archivo "data.tar.gz"
             data_path = "data.tar.gz"
         else:
@@ -392,10 +359,6 @@ class Archimedes():
         self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
         context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
         return output_file, context
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
 
 if __name__ == "__main__":
     archimedes = Archimedes() #inicializa la clase
