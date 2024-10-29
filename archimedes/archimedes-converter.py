@@ -259,7 +259,7 @@ class Archimedes():
             print(f"No es posible acceder al directorio {directory}")
 
     @contextmanager #creamos el manejador de contextos para los archivos temporales
-    def temp_directories(self, example): #elimina los archivos temporales independientemente de cómo acabe el código
+    def temp_directories(self): #elimina los archivos temporales independientemente de cómo acabe el código
         #crea directorios temporales de entrada y salida
         input_tempdir = mkdtemp()
         output_tempdir = mkdtemp()
@@ -305,21 +305,15 @@ class Archimedes():
 
         return data_path
 
-    
-
-    def convert(self, input_file:str, output_file:str) -> tuple:
+    def convert(self, input_file:str, output_file:str, context) -> tuple:
         """Crea archivos PKGINFO y FILELIST.
         
         Convierte el .deb en un paquete de arch
         """
         print("\nIniciando conversión. Por favor, sea paciente y no teclee en la terminal.\n")    
-        with self.temp_directories("sas") as (input_tempdir, output_tempdir): #llama al gestor de contexto de archivos temporales
+        with self.temp_directories() as (input_tempdir, output_tempdir): #llama al gestor de contexto de archivos temporales
+            print(f"Convirtiendo archivo {os.path.basename(input_file)}")
             print(f"Creando archivos temporales\nInput: {input_tempdir}\nOutput: {output_tempdir}\n")
-
-            if output_file == "":
-                _, coso = input_file.split(".deb")
-                output_file = f"{_}.pkg.tar.gz"
-
             self.change_dir(input_tempdir) #accede al directorio temporal para posteriormente ser eliminado
             
             self.command_executer(input_file=input_file,options="ar_command_extract") #llama al extractor de archivos
@@ -348,78 +342,91 @@ class Archimedes():
             
             checksums = self.calculate_checksums(file_path=input_file) #calculamos el checksum del archivo original
             self.write_checksum(path=f"{output_tempdir}/.CHECKSUMS", file_name=input_file.split("/")[-1],check_sum=checksums) #se crea el archivo .CHECKSUMS pasandole el nombre del archivo original, la ruta donde se escribirá y los checksums calculados
-            context = self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
+            self.command_executer(output_file=output_file,options="make_pkg") #se crea el PKG
             
             output,_ = os.path.split(output_file)
 
-            return output, context
+        return output, context
 
     def convert_iterator(self, DATA:dict):
         """Iterador para la función convert"""
-        if DATA:
-            if type(DATA["input_file"]) == list:
-                for input in DATA["input_file"]:
-                    output, context = self.convert(input, "")
+        if DATA: #comprueba si existe el diccionario
+            if type(DATA["input_file"]) == list: #comprueba si el diccionario tiene listas
+                for input in DATA["input_file"]: #itera sobre la lista de rutas, convirtiendo los archivos respectivamente
+                    file_path, _ = input.split(".deb") #se extrae el .deb de la ruta de entrada
+                    output_file = f"{file_path}.pkg.tar.gz" #se genera la ruta de salida
+                    output, context = self.convert(input, output_file, context="list_end")
                 return output, context
 
-            elif type(DATA["input_file"]) == str and type(DATA["output_file"]) == str:
-                output, context = self.convert(DATA["input_file"],DATA["output_file"])
+            elif type(DATA["input_file"]) == str and type(DATA["output_file"]) == str: #comprueba si el diccionario tiene cadenas
+                output, context = self.convert(DATA["input_file"],DATA["output_file"], context="string_end")
+                return output, context
+            else:
+                output, context = self.convert(DATA["input_file"],DATA["output_file"], context="string_end")
                 return output, context
 
-
-    def simple_gui(self, path) -> dict:
+    def simple_gui(self, path):
         """GUI simple"""
         os.system("clear")
+        #se cran las listas para guardar las rutas de entrada y salida, además de los nombres
         input_deb_path = []
         output_deb_path = []
         input_deb_names = []
         
         file_path, file = os.path.split(path) #rompe la ruta del archivo y la extensión del archivo
         file_name, file_extension = os.path.splitext(file) #extrae el nombre del archivo y su extensión
-        
-        #print(f"file_path: {file_path}\n file: {file}\n file_name: {file_name}\n file_extension: {file_extension}")
 
         if file:
+            #confirmamos que sea .deb
             if not file_extension != ".deb":
-                input_file_path = f"{os.path.abspath(os.path.join(file_path,file))}"
-                output_file_path = f"{os.path.abspath(os.path.join(file_path,file_name))}.pkg.tar.gz"
-                
-                return {"input_file":input_file_path,"output_file":""} #devuelve la ruta del archivo entrante y genera una ruta de salida con la extensión "pkg.tar.gz"
+                input_file_path = f"{os.path.abspath(os.path.join(file_path,file))}" #rescatamos la ruta de entrada
+                output_file_path = f"{os.path.abspath(os.path.join(file_path,file_name))}.pkg.tar.gz" #creamos la ruta de salida
+                self.convert_iterator({"input_file":input_file_path,"output_file":output_file_path}) #se usa el iterador de convert
+                print(f"\nSu archivo se encuentra en {output_file_path}")
+                print("Adiós! Gracias por usar Archimedes :D")
+                sys.exit(1)
             else:
                 print("ponga un archivo con extensión válido")
                 sys.exit(1)
-
-        if not file:    
-            files_lista:list = os.listdir(path)
-            for i in files_lista:
-                if i.endswith(".deb"):
-                    _, file_extension = os.path.splitext(i)
-                    input_deb_path.append(os.path.abspath(f"{file_path}/{i}"))
-                    output_deb_path.append(os.path.abspath(f"{file_path}/{_}.pkg.tar.gz"))
-                    input_deb_names.append(f"{i}")
+        
+        if not file: #si no es una ruta.deb 
+            files_lista:list = os.listdir(path) #lista los archivos existentes en el directorio
+            for i in files_lista: #iteramos en la lista de archivos
+                if i.endswith(".deb"): #busca los que terminan por .deb 
+                    _, file_extension = os.path.splitext(i) #separamos la ruta de su extensión
+                    input_deb_path.append(os.path.abspath(f"{file_path}/{i}")) #juntamos la ruta de entrada y el nombre del archivo
+                    output_deb_path.append(os.path.abspath(f"{file_path}/{_}.pkg.tar.gz")) #creamos la ruta de salida con la ruta de entrada, el nombre del archivo sin el .deb y el .pkg.tar.gz
+                    input_deb_names.append(f"{i}") #creamos la lista de nombres
             
-            if input_deb_path and output_deb_path:
-                print("\nArchivos \".deb\" encontrados en la ruta:\n")
-                extension = 0
+            while True:
+                if input_deb_path and output_deb_path: #comprobamos que se hayan creado las listas
+                    print("\nArchivos \".deb\" encontrados en la ruta:\n")
+                    extension = 0
+                    for names in input_deb_names: #iteramos sobre los nombres para enseñarlos en pantalla
+                        extension += 1
+                        print(f"{extension}. {names}")
+                    print("\nEscriba \"all\" para convertirlos a todos o el número del archivo que desee convertir. Presione cualquier tecla para cerrar:")
                 
-                for names in input_deb_names:
-                    extension += 1
-                    print(f"{extension}. {names}")
-                print("\nEscriba \"all\" para convertirlos a todos o el número del archivo que desee convertir. Presione cualquier tecla para cerrar:")
-            
-            select = input("\n")
-            os.system("clear")
-            match select:
-                case "all":
-                    return {"input_file":input_deb_path,"output_file":output_deb_path}
-                case _:
-                    if select.isdigit():
-                        return {"input_file":input_deb_path[int(select)-1],"output_file":output_deb_path[int(select)-1]}
-                    else:
-                        os.system("clear")
-                        print("Adiós!")
-                        sys.exit(1)
-            sys.exit(1)
+                    select = input("\n") #se le pide al usuario una opción
+                    os.system("clear")
+                    match select:
+                        case "all": #se convierten todos los archivos pasandole las listas completas
+                            self.convert_iterator({"input_file":input_deb_path,"output_file":""}) #no se le pasan las rutas de salida porque en este caso las genera automáticamente
+                            print(f"\n### Su archivo se encuentra en {file_path} ###")
+                            continue
+                        case _: #se convierte solo el archivo que se selecciona
+                            if select.isdigit():
+                                self.convert_iterator({"input_file":input_deb_path[int(select)-1],"output_file":output_deb_path[int(select)-1]})
+                                print(f"\n### Su archivo se encuentra en {file_path} ###")
+                                continue
+                            else:
+                                os.system("clear")
+                                print("Adiós! Gracias por usar Archimedes :D")
+                                sys.exit(1)
+                else:
+                    print("Faltan input_deb_path and output_deb_path")
+                    sys.exit(1)
+
         else:
             print("ponga un archivo o directorio")
             sys.exit(1)
@@ -446,15 +453,7 @@ if __name__ == "__main__":
     try:
         PATH = archimedes.command_handler() #inicializa el manejador de argumentos y los guarda en "DATA"
         archimedes.commands("ar", "tar", "find", "sed") #inicializa la búsqueda de los comandos
-        gui = True
-        while gui:
-            DATA = archimedes.simple_gui(PATH)
-            output, context = archimedes.convert_iterator(DATA)#inicializa la conversión con los datos extraidos del manejador de argumentos
-            match context:
-                case 0:
-                    print(f"\nHecho! \nSu archivo se encuentra en \"{output}\"")
-                    continue
-
+        DATA = archimedes.simple_gui(PATH)
     except KeyboardInterrupt:
         print("Abortando...")
 
