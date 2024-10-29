@@ -41,7 +41,7 @@ chmod +x archimedes-converter.py
 ## 💻 Uso
 
 ```bash
-./archimedes-converter.py <ruta de archivo .deb> o <ruta de directori> 
+./archimedes-converter.py <ruta de archivo .deb> o <ruta de directorio> 
 ```
 
 ### Ejemplos
