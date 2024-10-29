@@ -10,7 +10,7 @@ Archimedes es una herramienta de línea de comandos que permite convertir paquet
 - Conversión directa de paquetes .deb a formato .pkg.tar.gz
 - Mapeo automático de dependencias de Debian a Arch Linux
 - Soporte para múltiples formatos de compresión (gz, xz)
-- Generación automática de metadatos y archivos de control
+- Generación automática de metadatos, checksums y archivos de control
 - Compatible con diferentes arquitecturas (amd64, i686)
 
 ## 📋 Requisitos Previos
@@ -41,7 +41,7 @@ chmod +x archimedes-converter.py
 ## 💻 Uso
 
 ```bash
-./archimedes-converter.py <ruta de archivo .deb>
+./archimedes-converter.py <ruta de archivo .deb> o <ruta de directori> 
 ```
 
 ### Ejemplos
@@ -49,6 +49,9 @@ chmod +x archimedes-converter.py
 ```bash
 # Convertir un paquete .deb
 ./archimedes-converter.py /home/<usuario>/Descargas/archivo.deb
+
+# Convertir varios paquetes .deb
+./archimedes-converter.py /home/<usuario>/Descargas/
 
 # Mostrar ayuda
 ./archimedes-converter.py --help
@@ -66,8 +69,8 @@ sudo pacman -U <nombre del paquete convertido>
 1. Extracción del paquete .deb
 2. Análisis del archivo de control
 3. Mapeo de dependencias a equivalentes de Arch Linux
-4. Generación de archivos .PKGINFO y .FILELIST
-5. Creación del paquete final .pkg.tar.gz
+4. Generación de archivos .PKGINFO, .FILELIST y .CHECKSUMS
+5. Creación del paquete final .pkg.tar.gz7
 
 ## 📦 Soporte de Dependencias
 
