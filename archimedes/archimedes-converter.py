@@ -280,7 +280,7 @@ class Archimedes():
                 #extraer el "data.tar" de la carpeta temporal en la carpeta de salida temporal  
                 os.system(f"tar -xf {input_dir} -C {shlex.quote(output_dir)}") #esto es una linea de codigo utilizable en bash
             elif kwarg["options"] == "make_pkg":
-                context = os.system(f"ionice -c2 -n7 nice -n 19 tar -zvcf {shlex.quote(output_file)} * .PKGINFO .FILELIST .CHECKSUMS") #crea el instalador "pkg.tar.gz" usando el "PKGINFO" y "FILELIST" y lo deja en la ruta de salida "output_file"
+                context = os.system(f"ionice -c2 -n7 nice -n 19 bsdtar -zvcf {shlex.quote(output_file)} * .PKGINFO .FILELIST .CHECKSUMS") #crea el instalador "pkg.tar.gz" usando el "PKGINFO" y "FILELIST" y lo deja en la ruta de salida "output_file"
                 os.system("clear")
                 return context
             elif kwarg["options"] == "make_pkginfo":
@@ -452,7 +452,7 @@ if __name__ == "__main__":
     archimedes = Archimedes() #inicializa la clase
     try:
         PATH = archimedes.command_handler() #inicializa el manejador de argumentos y los guarda en "DATA"
-        archimedes.commands("ar", "tar", "find", "sed") #inicializa la búsqueda de los comandos
+        archimedes.commands("ar", "bsdtar", "find", "sed") #inicializa la búsqueda de los comandos
         DATA = archimedes.simple_gui(PATH)
     except KeyboardInterrupt:
         print("Abortando...")
