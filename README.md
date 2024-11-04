@@ -17,7 +17,7 @@ Archimedes es una herramienta de línea de comandos que permite convertir paquet
 
 El script requiere los siguientes comandos disponibles en el sistema:
 - `ar`
-- `tar`
+- `bsdtar`
 - `find`
 - `sed`
 - Python 3.10
