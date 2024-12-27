@@ -116,7 +116,10 @@ class Archimedes():
         if pkginfo["url"]:
             url = pkginfo["url"]
         else:
-            _, splited = pkginfo["maintainer"].split("<")
+            if "<" in pkginfo["maintainer"]:
+                _, splited = pkginfo["maintainer"].split("<")
+            else:
+                splited = pkginfo["maintainer"]
             url = f"<{splited}"
 
         #escribe el archivo PKGINFO con los siguientes datos:
